@@ -1,4 +1,7 @@
+const webpack = require('webpack');
+const autoprefixer = require('autoprefixer');
 module.exports = {
+  devtool: 'eval-source-map',
   entry: {
     app: [
       'react-hot-loader/patch',
@@ -27,14 +30,46 @@ module.exports = {
 
     chunkFilename: '[name].chunk.js'
   },
+  module: {
+    rules: [
+      {
+        test: /\.(scss|sass|css|less)$/,
+        include: APP_PATH,
+        use: [
+          'style-loader',
+          'css-loader',
+          'less-loader',
+          {
+            loader: 'postcss-loader',
+            options: {
+              sourceMap: false,
+              plugins: (loader) => [
+                autoprefixer(config.autoConfig)
+              ]
+            }
+          },
+          'sass-loader' + config.sassLoaderSuffix
+        ]
+      }, {
+        test: /\.(eot|woff|woff2|ttf|svg|png|jpe?g|gif|mp4|webm)(\?\S*)?$/,
+        include: APP_PATH,
+        loader: 'url-loader?limit=8192&name=imgs/[name].[ext]'
+      }
+    ]
+  },
   plugins: [
     new webpack.HotModuleReplacementPlugin(),
     // 开启全局的模块热替换(HMR)
 
     new webpack.NamedModulesPlugin(),
     // 控制台输出模块命名美化
-    new webpack.optimize.ModuleConcatenationPlugin()
+    new webpack.optimize.ModuleConcatenationPlugin(),
     // Webpack 3 中提供了插件来允许开发者启用作用域提升特性来避免这种额外的性能损耗
+    new webpack.LoaderOptionsPlugin({ //浏览器加前缀
+      options: {
+        postcss: [require('autoprefixer')({ browsers: ['last 5 versions'] })]
+      }
+    }),
   ],
   devServer: {
     // ... 其他配置
